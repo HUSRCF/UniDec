@@ -2767,6 +2767,58 @@ prof/phase7_superblock_s{1,4,8,16}_{original,first-page,auto-first-page}_rows_81
 prof/phase7_superblock_rows8192_summary.csv
 ```
 
+### Phase 8: Scoped Virtual-To-Physical Remap Policies
+
+The Phase 7 result argues for an explicit remap layer rather than mutating the
+trace or assuming numeric block IDs encode useful physical locality. The
+standalone replay now supports:
+
+- `--physical-remap-policy first-touch-compact`: assign each scoped logical KV
+  block the next physical page the first time it appears in the original replay
+  scan.
+- `--physical-remap-policy numeric-superblock`: the Phase 7 numeric-ID grouping
+  model, controlled by `--physical-superblock`.
+- `--physical-remap-policy oracle-access-order`: an upper-bound approximation in
+  standalone replay only. It first builds the launch/group order, then reassigns
+  scoped logical KV blocks by that access order and reruns scheduling.
+
+The remap key remains scoped. It is still based on the layout namespace, not raw
+numeric `block_id`.
+
+Initial 8,192-row replay:
+
+| remap policy | row order | effective order | kernel ms | scheduler ms | online E2E ms | E2E speedup vs policy original |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| first-touch-compact | original | original | 59.117 | 10.920 | 70.037 | 1.000x |
+| first-touch-compact | first-page | first-page | 40.153 | 10.368 | 50.521 | 1.386x |
+| first-touch-compact | auto-first-page | first-page | 39.987 | 10.325 | 50.312 | 1.392x |
+| oracle-access-order | original | original | 58.871 | 14.847 | 73.718 | 1.000x |
+| oracle-access-order | first-page | first-page | 40.108 | 14.583 | 54.690 | 1.348x |
+| oracle-access-order | auto-first-page | first-page | 40.103 | 14.269 | 54.372 | 1.356x |
+
+Interpretation:
+
+- `first-touch-compact` is effectively the explicit name for the dense trace
+  remap that has been used as the stable baseline.
+- The oracle-style remap does not improve kernel time on this slice; it mainly
+  adds scheduler work because it performs a second remap/scheduling pass. That
+  is useful evidence: the current row-ordering gain is not hiding a large
+  allocator-layout upper bound in this replay model.
+- This does not close the KV layout question. It only rules out the current two
+  cheap models (`numeric-superblock` and row-access-order oracle) as immediate
+  wins. The next allocator replay should model allocation segments more
+  faithfully: sequence append order, prefix allocation groups, and compaction
+  within `(layout scope, request/sequence, logical block index)` if reliable
+  sequence provenance is available.
+
+Output files:
+
+```text
+prof/phase8_remap_first-touch-compact_{original,first-page,auto-first-page}_rows_8192.csv
+prof/phase8_remap_oracle-access-order_{original,first-page,auto-first-page}_rows_8192.csv
+prof/phase8_remap_rows8192_summary.csv
+```
+
 Output files:
 
 ```text

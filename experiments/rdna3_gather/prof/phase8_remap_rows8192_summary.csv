@@ -1,0 +1,7 @@
+physical_remap_policy,row_order,effective_row_order,kernel_ms,scheduler_ms,online_e2e_ms,e2e_speedup_vs_policy_original,kernel_speedup_vs_policy_original,first_page_unique_ratio,first_page_unique_w128_ratio_p50
+first-touch-compact,original,original,59.1167755127,10.9200440049,70.0368195176,1.000000,,0.15625,1
+first-touch-compact,first-page,first-page,40.1527023315,10.3679240346,50.5206263661,1.386301,,0.15625,1
+first-touch-compact,auto-first-page,first-page,39.9869537354,10.3254529834,50.3124067187,1.392039,,0.15625,1
+oracle-access-order,original,original,58.871307373,14.8467630148,73.7180703878,1.000000,,0.15625,1
+oracle-access-order,first-page,first-page,40.1076622009,14.5826659799,54.6903281808,1.347918,,0.15625,1
+oracle-access-order,auto-first-page,first-page,40.1032676697,14.2691640258,54.3724316955,1.355799,,0.15625,1

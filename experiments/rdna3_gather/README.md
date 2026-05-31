@@ -460,6 +460,37 @@ assert that vLLM numeric block IDs are physical addresses. First results are in
 but the current numeric-ID grouping does not yet beat the Phase 6 row-ordering
 effect by itself.
 
+For allocator-policy ablations, use `--physical-remap-policy`:
+
+```bash
+./standalone_paged_producer \
+  --page-locality trace \
+  --physical-remap-policy first-touch-compact \
+  --strategy capacity_class \
+  --row-order auto-first-page \
+  --restore-mode row-indices \
+  --scheduler-reuse-metadata-buffers \
+  --limit-traces 8192 \
+  --output prof/phase8_remap_first-touch-compact_auto-first-page_rows_8192.csv
+
+./standalone_paged_producer \
+  --page-locality trace \
+  --physical-remap-policy oracle-access-order \
+  --strategy capacity_class \
+  --row-order auto-first-page \
+  --restore-mode row-indices \
+  --scheduler-reuse-metadata-buffers \
+  --limit-traces 8192 \
+  --output prof/phase8_remap_oracle-access-order_auto-first-page_rows_8192.csv
+```
+
+`oracle-access-order` is implemented only in the standalone C++ replay. It is an
+upper-bound diagnostic that remaps after observing the launch/group order; it is
+not a production allocator. In the first 8,192-row run it did not improve kernel
+time over first-touch compaction, so the next layout experiment should target a
+more realistic allocator model: sequence append, prefix allocation groups, or
+request/sequence-aware compaction if the trace exposes reliable provenance.
+
 To inspect the captured block-table reuse and KV layout signatures:
 
 ```bash

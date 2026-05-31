@@ -382,8 +382,17 @@ def make_paged_state(trace_meta, args, dtype):
         raise RuntimeError("--kv-pages must be positive")
     if int(args.physical_superblock) <= 0:
         raise RuntimeError("--physical-superblock must be positive")
+    if args.physical_remap_policy == "oracle-access-order":
+        raise RuntimeError(
+            "--physical-remap-policy oracle-access-order is currently implemented in "
+            "standalone_paged_producer only"
+        )
     trace_page_ids = {}
-    if use_trace_blocks and int(args.physical_superblock) > 1:
+    if (
+        use_trace_blocks
+        and args.physical_remap_policy == "numeric-superblock"
+        and int(args.physical_superblock) > 1
+    ):
         blocks_by_scope = {}
         for row, seqlen in enumerate(trace_meta.cache_seqlens):
             pages = max(1, math.ceil(seqlen / page_block_size))
@@ -427,7 +436,10 @@ def make_paged_state(trace_meta, args, dtype):
                 )
                 scope = trace_meta.block_id_scopes[row]
                 key = (scope, int(block_ids[page]))
-                if int(args.physical_superblock) > 1:
+                if (
+                    args.physical_remap_policy == "numeric-superblock"
+                    and int(args.physical_superblock) > 1
+                ):
                     phys = trace_page_ids[key]
                 else:
                     phys = trace_page_ids.setdefault(key, len(trace_page_ids))
@@ -885,6 +897,11 @@ def main():
     parser.add_argument("--value-dim", type=int, default=32)
     parser.add_argument("--page-locality", choices=("random", "contiguous", "page-cross", "hot-page", "trace"), default="random")
     parser.add_argument("--hot-pages", type=int, default=1)
+    parser.add_argument(
+        "--physical-remap-policy",
+        choices=("first-touch-compact", "numeric-superblock", "oracle-access-order"),
+        default="numeric-superblock",
+    )
     parser.add_argument("--physical-superblock", type=int, default=1)
     parser.add_argument("--chunk-tokens", type=int, default=32)
     parser.add_argument("--warmup", type=int, default=1)

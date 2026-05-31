@@ -69,12 +69,17 @@ def layout_scope(obj, path: Path):
     return ("fallback", str(path.resolve()), layer)
 
 
-def make_dense_page_rows(raw_rows, physical_superblock: int):
+def make_dense_page_rows(raw_rows, physical_superblock: int, physical_remap_policy: str):
     if physical_superblock <= 0:
         raise RuntimeError("--physical-superblock must be positive")
+    if physical_remap_policy == "oracle-access-order":
+        raise RuntimeError(
+            "--physical-remap-policy oracle-access-order is currently implemented in "
+            "standalone_paged_producer only"
+        )
 
     scoped_ids = {}
-    if physical_superblock > 1:
+    if physical_remap_policy == "numeric-superblock" and physical_superblock > 1:
         blocks_by_scope = {}
         for item in raw_rows:
             scope_ids = blocks_by_scope.setdefault(item["scope"], set())
@@ -98,7 +103,7 @@ def make_dense_page_rows(raw_rows, physical_superblock: int):
 
     rows = []
     for item in raw_rows:
-        if physical_superblock > 1:
+        if physical_remap_policy == "numeric-superblock" and physical_superblock > 1:
             dense_pages = [scoped_ids[(item["scope"], block_id)] for block_id in item["block_ids"]]
         else:
             dense_pages = [
@@ -114,7 +119,13 @@ def make_dense_page_rows(raw_rows, physical_superblock: int):
     return rows
 
 
-def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float, physical_superblock: int):
+def load_rows(
+    paths: Sequence[Path],
+    chunk_tokens: int,
+    actual_scale: float,
+    physical_superblock: int,
+    physical_remap_policy: str,
+):
     raw_rows = []
     for path in trace_files(paths):
         with path.open() as f:
@@ -143,7 +154,7 @@ def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float, phy
                         "actual": int(math.ceil(actual * actual_scale)),
                     }
                 )
-    return make_dense_page_rows(raw_rows, physical_superblock)
+    return make_dense_page_rows(raw_rows, physical_superblock, physical_remap_policy)
 
 
 def choose_capacity(actual: int, classes: Sequence[int]) -> int:
@@ -249,7 +260,13 @@ def reuse_distance_stats(rows, order: Sequence[int]):
     }
 
 
-def summarize_order(rows, order: Sequence[int], order_name: str, physical_superblock: int):
+def summarize_order(
+    rows,
+    order: Sequence[int],
+    order_name: str,
+    physical_superblock: int,
+    physical_remap_policy: str,
+):
     lcps = [lcp(rows[a]["pages"], rows[b]["pages"]) for a, b in zip(order, order[1:])]
     first_page_deltas = [
         abs(rows[a]["pages"][0] - rows[b]["pages"][0])
@@ -258,6 +275,7 @@ def summarize_order(rows, order: Sequence[int], order_name: str, physical_superb
     ]
     out = {
         "row_order": order_name,
+        "physical_remap_policy": physical_remap_policy,
         "physical_superblock": physical_superblock,
         "rows": len(order),
         "adjacent_lcp_mean": sum(lcps) / len(lcps) if lcps else 0.0,
@@ -288,17 +306,32 @@ def main():
     parser.add_argument("--classes", default="8,12,20,36,68,132")
     parser.add_argument("--chunk-tokens", type=int, default=32)
     parser.add_argument("--actual-scale", type=float, default=1.0)
+    parser.add_argument(
+        "--physical-remap-policy",
+        choices=("first-touch-compact", "numeric-superblock", "oracle-access-order"),
+        default="numeric-superblock",
+    )
     parser.add_argument("--physical-superblock", type=int, default=1)
     parser.add_argument("--row-orders", nargs="+", default=list(ROW_ORDERS), choices=ROW_ORDERS)
     parser.add_argument("--output", type=Path, default=THIS_DIR / "prof" / "strict_trace_row_order_reuse.csv")
     args = parser.parse_args()
 
     classes = sorted(parse_int_list(args.classes))
-    rows = load_rows(args.trace, args.chunk_tokens, args.actual_scale, args.physical_superblock)
+    rows = load_rows(
+        args.trace,
+        args.chunk_tokens,
+        args.actual_scale,
+        args.physical_superblock,
+        args.physical_remap_policy,
+    )
     summaries = []
     for order_name in args.row_orders:
         order = launch_order(rows, classes, order_name)
-        summaries.append(summarize_order(rows, order, order_name, args.physical_superblock))
+        summaries.append(
+            summarize_order(
+                rows, order, order_name, args.physical_superblock, args.physical_remap_policy
+            )
+        )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", newline="") as f:
