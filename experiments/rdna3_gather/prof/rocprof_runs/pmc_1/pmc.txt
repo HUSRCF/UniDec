@@ -1,0 +1,7 @@
+pmc : L2CacheHit
+pmc : L2CacheHit
+pmc : GL2C_HIT GL2C_MISS
+pmc : GL2C_HIT_sum GL2C_MISS_sum
+pmc : L2CacheHit
+pmc : L2CacheHit
+pmc : L2CacheHit

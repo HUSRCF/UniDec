@@ -1,0 +1,3 @@
+Dispatch_ID,GPU_ID,Queue_ID,PID,TID,Grid_Size,Workgroup_Size,LDS_Per_Workgroup,Scratch_Per_Workitem,Arch_VGPR,Accum_VGPR,SGPR,Wave_Size,Kernel_Name,Start_Timestamp,End_Timestamp,Correlation_ID,GL2C_EA_RDREQ_96B_sum
+
+10,1,1,1054545,1054545,131072,256,2560,0,24,0,128,32,"(anonymous namespace)::replay_paged_kv_chunk_softmax_kernel(float*, float*, float*, unsigned int const*, unsigned int const*, unsigned int const*, int const*, int const*, int const*, int const*, int, int, long, long, long, long, long, long, long, long, long, int) (.kd)",182580992949831,182580993143633,0,0.000000

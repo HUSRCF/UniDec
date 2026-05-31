@@ -1,0 +1,2 @@
+pmc : L2CacheHit FETCH_SIZE WRITE_SIZE MemUnitBusy Wavefronts VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+kernel: replay_paged_kv_chunk_softmax_kernel

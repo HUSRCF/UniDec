@@ -1,0 +1,16 @@
+pmc : GL2C_HIT_sum GL2C_MISS_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_EA_RDREQ_32B_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_EA_RDREQ_64B_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_EA_RDREQ_96B_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_EA_RDREQ_128B_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_MC_WRREQ_sum GL2C_EA_WRREQ_64B_sum GL2C_WRREQ_STALL_max
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : TA_BUFFER_LOAD_WAVEFRONTS_sum TA_BUFFER_STORE_WAVEFRONTS_sum
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : Wavefronts
+kernel: replay_paged_kv_chunk_softmax_kernel

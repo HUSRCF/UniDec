@@ -1,0 +1,2 @@
+dtype,tasks,tile_tokens,dim,num_transforms,variant,chunk_size
+fp16,32,64,32,8,graph_global,0

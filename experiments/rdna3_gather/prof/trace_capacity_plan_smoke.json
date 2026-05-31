@@ -1,0 +1,51 @@
+{
+  "actual_work_size": {
+    "max": 1108,
+    "mean": 588.7777777777778,
+    "min": 132,
+    "p50": 548.0,
+    "p90": 1094.0,
+    "p95": 1108.0,
+    "p99": 1108.0
+  },
+  "capacity_round": 64,
+  "chunk_tokens": 32,
+  "class_plan": "ratio",
+  "max_class_points": 2048,
+  "num_classes": 4,
+  "num_transforms_default": 8,
+  "recommended_classes": {
+    "class_counts": {
+      "192": 96,
+      "576": 96,
+      "1152": 96
+    },
+    "classes": [
+      192,
+      576,
+      1152
+    ],
+    "overflow_count": 0,
+    "overflow_rate": 0.0,
+    "ratio_summary": {
+      "max": 1.4545454545454546,
+      "mean": 1.1667114577205058,
+      "min": 1.0158730158730158,
+      "p50": 1.0832275291329951,
+      "p90": 1.4545454545454546,
+      "p95": 1.4545454545454546,
+      "p99": 1.4545454545454546
+    }
+  },
+  "records": 288,
+  "static_capacity_actual_ratio": {
+    "max": 15.784200385356455,
+    "mean": 4.151982275049581,
+    "min": 1.0,
+    "p50": 1.6277372262773722,
+    "p90": 14.733812949640289,
+    "p95": 15.03119266055046,
+    "p99": 15.784200385356455
+  },
+  "trace": "experiments/rdna3_gather/prof/graph_skew_phase3f_capacity_sweep.csv"
+}

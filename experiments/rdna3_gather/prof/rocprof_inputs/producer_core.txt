@@ -1,0 +1,2 @@
+pmc : L2CacheHit FETCH_SIZE MemUnitBusy Wavefronts
+kernel: replay_paged_kv_chunk_softmax_kernel

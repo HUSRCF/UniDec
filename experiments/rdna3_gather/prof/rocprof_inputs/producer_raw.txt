@@ -1,0 +1,12 @@
+pmc : GL2C_HIT GL2C_MISS
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_EA_RDREQ_32B GL2C_EA_RDREQ_64B GL2C_EA_RDREQ_96B GL2C_EA_RDREQ_128B
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : GL2C_MC_WRREQ GL2C_EA_WRREQ_64B GL2C_MC_WRREQ_STALL
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : TA_TA_BUSY TA_BUFFER_LOAD_WAVEFRONTS TA_BUFFER_STORE_WAVEFRONTS
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : SQ_WAVES SQ_INSTS_VALU SQ_INSTS_SALU SQ_INSTS_SMEM SQ_INSTS_TEX_LOAD SQ_INSTS_TEX_STORE SQ_WAIT_ANY SQ_WAVE_CYCLES
+kernel: replay_paged_kv_chunk_softmax_kernel
+pmc : SQ_INST_CYCLES_VMEM SQ_WAIT_INST_ANY SQ_BUSY_CYCLES
+kernel: replay_paged_kv_chunk_softmax_kernel

@@ -1,0 +1,85 @@
+{
+  "aggregate_rows": 162,
+  "bad_cases_threshold": 0.95,
+  "clock_profile": "not_captured",
+  "command": [
+    "experiments/rdna3_gather/sweep_graph_auto.py",
+    "--quiet",
+    "--warmup",
+    "2",
+    "--iters",
+    "10",
+    "--output",
+    "experiments/rdna3_gather/prof/graph_auto_policy_sweep_realistic_table_raw.csv",
+    "--aggregate-output",
+    "experiments/rdna3_gather/prof/graph_auto_policy_sweep_realistic_table_median.csv",
+    "--bad-cases-output",
+    "experiments/rdna3_gather/prof/graph_auto_policy_bad_cases_realistic_table.csv",
+    "--policy-output",
+    "experiments/rdna3_gather/prof/graph_auto_policy_table_from_realistic_table_run.csv",
+    "--metadata-output",
+    "experiments/rdna3_gather/prof/graph_auto_policy_table_from_realistic_table_run.meta.json",
+    "--policy-table-for-auto",
+    "experiments/rdna3_gather/prof/graph_auto_policy_table.csv"
+  ],
+  "created_unix_time": 1780070859.5597188,
+  "dims_list": [
+    32,
+    64,
+    128
+  ],
+  "dtypes": [
+    "fp16",
+    "bf16"
+  ],
+  "gfx_target_env": "gfx1100",
+  "gpu_gcn_arch": "gfx1100",
+  "gpu_name": "AMD Radeon PRO W7900",
+  "iters": 10,
+  "kernel_git_commit": "unavailable",
+  "num_transforms_list": [
+    8,
+    16,
+    32
+  ],
+  "page_size": 128,
+  "patterns_list": [
+    "random",
+    "contiguous",
+    "page-cross",
+    "tail-negative"
+  ],
+  "platform": "Linux-6.17.0-29-generic-x86_64-with-glibc2.39",
+  "policy_min_speedup_vs_global": 1.02,
+  "policy_rows": 162,
+  "policy_table_for_auto": "experiments/rdna3_gather/prof/graph_auto_policy_table.csv",
+  "policy_variant_counts": {
+    "graph_global": 71,
+    "graph_lds": 2,
+    "graph_lds_chunked": 89
+  },
+  "power_profile": "not_captured",
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:27:36) [GCC 11.2.0]",
+  "raw_rows": 1944,
+  "rocm_hipcc_version": "HIP version: 7.2.26015-fc0010cf6a\nAMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.0 26014 7b800a19466229b8479a78de19143dc33c3ab9b5)\nTarget: x86_64-unknown-linux-gnu\nThread model: posix\nInstalledDir: /opt/rocm-7.2.0/lib/llvm/bin\nConfiguration file: /opt/rocm-7.2.0/lib/llvm/bin/clang++.cfg",
+  "rows": 4096,
+  "schema": "rdna3_gather_policy_table_v1",
+  "seeds_list": [
+    0,
+    1,
+    2
+  ],
+  "tasks_list": [
+    32,
+    128,
+    256
+  ],
+  "tile_tokens_list": [
+    64,
+    128,
+    256
+  ],
+  "torch_hip_version": "7.2.53211",
+  "torch_version": "2.12.0+rocm7.2",
+  "warmup": 2
+}

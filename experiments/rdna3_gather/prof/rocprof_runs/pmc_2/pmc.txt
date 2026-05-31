@@ -1,0 +1,6 @@
+pmc : FETCH_SIZE
+pmc : FETCH_SIZE
+pmc : GL2C_EA_RDREQ_32B_sum
+pmc : FETCH_SIZE
+pmc : FETCH_SIZE
+pmc : FETCH_SIZE

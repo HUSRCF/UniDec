@@ -1,0 +1,2 @@
+strategy,page_locality,row_order,traces,actual_min,actual_p50,actual_p90,actual_max,total_actual_blocks,total_capacity_blocks,empty_blocks,empty_block_fraction,launch_count,grid_threads,event_ms,per_trace_us,page_block_size,num_kv_heads,head_dim,chunk_tokens,value_dim
+capacity_class,trace,prefix-hash-4,114820,6,20,130,132,5075340,5190640,115300,0.0222130604319,6,1328803840,344.536712646,3.00066811223,1056,2,256,32,32

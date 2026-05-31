@@ -1,0 +1,32 @@
+# Python/runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Native build artifacts
+*.so
+*.o
+*.a
+*.lo
+*.la
+*.dylib
+*.dll
+*.exe
+*.hsaco
+
+# Local extension/build outputs
+build/
+dist/
+*.egg-info/
+experiments/rdna3_gather/.torch_ext/
+experiments/rdna3_gather/.rocprofv3/
+experiments/rdna3_gather/standalone_paged_producer
+experiments/rdna3_gather/standalone_stride_probe
+
+# Large local trace payloads copied from sidework.
+# Keep summaries and prof CSVs in git; raw traces should be restored separately.
+experiments/rdna3_gather/trace/
+
+# Editor/OS noise
+.DS_Store
+*~

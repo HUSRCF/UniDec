@@ -1,0 +1,6 @@
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+pmc : GL2C_EA_RDREQ_128B_sum
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy

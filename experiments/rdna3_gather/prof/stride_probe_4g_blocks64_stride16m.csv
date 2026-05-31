@@ -1,0 +1,2 @@
+footprint_mb,stride_bytes,segments,refs,loads_per_ref,blocks,threads,bytes_read,event_ms,effective_gib_s,ns_per_load
+4096,16777216,256,8388608,4,64,256,134217728,6.339848,19.716561,0.188942

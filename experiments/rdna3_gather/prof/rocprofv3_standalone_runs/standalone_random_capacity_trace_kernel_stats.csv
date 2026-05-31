@@ -1,0 +1,4 @@
+"Name","Calls","TotalDurationNs","AverageNs","Percentage","MinNs","MaxNs","StdDev"
+"(anonymous namespace)::replay_paged_kv_chunk_softmax_standalone(float*, float*, float*, unsigned int const*, unsigned int const*, unsigned int const*, int const*, int const*, int const*, int const*, int, int, long, long, long, long, long, long, long, long, long, int)",6,55859747,9309957.833333,94.17,1657804,27436379,9925032.304988
+"(anonymous namespace)::init_packed_bf16_kernel(unsigned int*, long, unsigned int)",3,3289186,1096395.333333,5.55,1960,2339704,1175960.970618
+"__amd_rocclr_copyBuffer",12,168488,14040.666667,0.2840,13041,17641,1184.813091

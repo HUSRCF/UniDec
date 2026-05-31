@@ -1,0 +1,2 @@
+dtype,tasks,tile_tokens,dim,num_transforms,samples,patterns,seeds,lds_fits,policy,best_variant,global_ms,lds_ms,chunk2_ms,chunk4_ms,chunk8_ms,auto_ms,auto_speedup_vs_global,best_speedup_vs_global,auto_vs_best,max_abs_diff_auto
+fp16,32,64,32,8,8,contiguous;page-cross;random;tail-negative,0;1,1,graph_global,global,0.010908100008964538,0.020596100389957427,0.012004099786281586,0.014880199730396271,0.02041210010647774,0.010792100057005882,1.010748598636588,1.0,1.010748598636588,0.0

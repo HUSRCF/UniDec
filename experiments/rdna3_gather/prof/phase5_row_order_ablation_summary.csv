@@ -1,0 +1,16 @@
+source,row_order,effective_row_order,event_ms,per_trace_event_us,row_order_setup_ms,group_setup_ms,first_page_unique_ratio,first_page_unique_w128_p50,path
+pytorch_paged_full,first-2-pages,first-2-pages,341.23333740234375,2.9718980787523406,143.0523409799207,77.1703860082198,,,prof/phase5_replay_strict_scoped_trace_first_2_pages_paged_full_vdim32.csv
+pytorch_paged_full,lexicographic,lexicographic,341.26593017578125,2.9721819384757118,120.04941099439748,72.64295101049356,,,prof/phase5_replay_strict_scoped_trace_lexicographic_paged_full_vdim32.csv
+pytorch_paged_full,first-page,first-page,341.2925109863281,2.972413438306289,122.81550199259073,75.67312999162823,,,prof/phase5_replay_strict_scoped_trace_first_page_paged_full_vdim32.csv
+pytorch_paged_full,auto-first-page,first-page,341.33953857421875,2.972823014929618,134.27760096965358,68.17727896850556,0.06671311618184986,128.0,prof/phase5_replay_strict_scoped_trace_auto_first_page_paged_full_vdim32.csv
+pytorch_paged_full,prefix-hash-2,prefix-hash-2,347.7709045410156,3.0288356082652466,184.93279698304832,82.54312499775551,,,prof/phase5_replay_strict_scoped_trace_prefix_hash_2_paged_full_vdim32.csv
+pytorch_paged_full,original,original,544.3020629882812,4.740481301064982,1.207609020639211,60.251049988437444,,,prof/phase5_replay_strict_scoped_trace_original_paged_full_vdim32.csv
+standalone,auto-first-page,first-page,337.43347168,2.93880396864,,,0.0667131161818,128,prof/phase5_standalone_trace_auto_first_page_capacity_vdim32.csv
+standalone,first-page,first-page,337.52255249,2.93957979873,,,,,prof/phase5_standalone_trace_first_page_capacity_vdim32.csv
+standalone,lexicographic,lexicographic,337.598144531,2.94023815129,,,,,prof/phase5_standalone_trace_lexicographic_capacity_vdim32.csv
+standalone,first-2-pages,first-2-pages,337.62411499,2.9404643354,,,,,prof/phase5_standalone_trace_first_2_pages_capacity_vdim32.csv
+standalone,lcp-bucket,lcp-bucket,337.697540283,2.94110381713,,,,,prof/phase5_standalone_trace_lcp_bucket_capacity_vdim32.csv
+standalone,first-4-pages,first-4-pages,337.784637451,2.94186237111,,,,,prof/phase5_standalone_trace_first_4_pages_capacity_vdim32.csv
+standalone,prefix-hash-2,prefix-hash-2,344.104797363,2.99690643932,,,,,prof/phase5_standalone_trace_prefix_hash_2_capacity_vdim32.csv
+standalone,prefix-hash-4,prefix-hash-4,344.536712646,3.00066811223,,,,,prof/phase5_standalone_trace_prefix_hash_4_capacity_vdim32.csv
+standalone,original,original,541.05255127,4.71218038033,,,,,prof/phase5_standalone_trace_original_capacity_vdim32.csv

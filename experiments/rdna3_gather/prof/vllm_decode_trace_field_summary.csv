@@ -1,0 +1,7 @@
+file,rows,actual_min,actual_p50,actual_max,batch_min,batch_max,seqlen_min,seqlen_max,q_len_values,num_q_heads,num_kv_heads,head_dim,chunk_tokens,page_block_size,head_mapping,dtype,kv_dtype
+dolly_plen1024_gen64_gpu1.jsonl,1917,66,66,68,1,1,1025,1087,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']
+dolly_plen128_gen64_gpu1.jsonl,2008,10,10,12,1,1,129,191,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']
+dolly_plen2048_gen64_gpu1.jsonl,1981,130,130,132,1,1,2049,2111,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']
+dolly_plen256_gen64_gpu1.jsonl,2016,18,18,20,1,1,257,319,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']
+dolly_plen512_gen64_gpu1.jsonl,2016,34,34,36,1,1,513,575,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']
+dolly_plen64_gen64_gpu1.jsonl,1994,6,6,8,1,1,65,127,[1],[16],[2],[256],[32],[1056],['kv'],['unknown'],['bf16']

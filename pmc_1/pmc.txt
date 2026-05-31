@@ -1,0 +1,2 @@
+pmc : L2CacheHit FETCH_SIZE MemUnitBusy Wavefronts
+pmc : L2CacheHit

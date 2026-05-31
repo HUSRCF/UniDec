@@ -1,0 +1,2 @@
+strategy,page_locality,row_order,effective_row_order,traces,actual_min,actual_p50,actual_p90,actual_max,total_actual_blocks,total_capacity_blocks,empty_blocks,empty_block_fraction,launch_count,grid_threads,event_ms,per_trace_us,page_block_size,num_kv_heads,head_dim,chunk_tokens,value_dim,first_page_unique,first_page_unique_ratio,adjacent_first_page_hit_ratio,first_page_unique_w128_p50
+capacity_class,trace,auto-first-page,original,256,66,66,66,66,16896,17408,512,0.0294117647059,1,4456448,2.82696008682,11.0428128392,1056,2,256,32,32,256,1,0,128

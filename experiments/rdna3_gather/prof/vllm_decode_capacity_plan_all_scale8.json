@@ -1,0 +1,65 @@
+{
+  "actual_scale": 8.0,
+  "actual_work_size": {
+    "max": 1056,
+    "mean": 357.0807911498491,
+    "min": 48,
+    "p50": 160.0,
+    "p90": 1040.0,
+    "p95": 1056.0,
+    "p99": 1056.0
+  },
+  "capacity_round": 4,
+  "chunk_tokens": 32,
+  "class_plan": "ratio",
+  "max_class_points": 2048,
+  "num_classes": 6,
+  "num_transforms_default": 8,
+  "recommended_classes": {
+    "class_counts": {
+      "64": 1994,
+      "96": 2008,
+      "160": 2016,
+      "288": 2016,
+      "544": 1917,
+      "1056": 1981
+    },
+    "classes": [
+      64,
+      96,
+      160,
+      288,
+      544,
+      1056
+    ],
+    "overflow_count": 0,
+    "overflow_rate": 0.0,
+    "ratio_summary": {
+      "max": 1.3333333333333333,
+      "mean": 1.0641759808774853,
+      "min": 1.0,
+      "p50": 1.0153846153846153,
+      "p90": 1.2,
+      "p95": 1.3333333333333333,
+      "p99": 1.3333333333333333
+    }
+  },
+  "records": 11932,
+  "static_capacity_actual_ratio": {
+    "max": 1.0,
+    "mean": 1.0,
+    "min": 1.0,
+    "p50": 1.0,
+    "p90": 1.0,
+    "p95": 1.0,
+    "p99": 1.0
+  },
+  "trace": [
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen64_gen64_gpu1.jsonl",
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen128_gen64_gpu1.jsonl",
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen256_gen64_gpu1.jsonl",
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen512_gen64_gpu1.jsonl",
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen1024_gen64_gpu1.jsonl",
+    "/home/husrcf/Code/ProtBind/MTP/traceData/vllm_decode_workload/jsonl/dolly_plen2048_gen64_gpu1.jsonl"
+  ]
+}

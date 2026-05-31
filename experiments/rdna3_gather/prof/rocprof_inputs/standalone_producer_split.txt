@@ -1,0 +1,14 @@
+pmc : L2CacheHit
+kernel: replay_paged_kv_chunk_softmax_standalone
+
+pmc : FETCH_SIZE
+kernel: replay_paged_kv_chunk_softmax_standalone
+
+pmc : MemUnitBusy
+kernel: replay_paged_kv_chunk_softmax_standalone
+
+pmc : Wavefronts
+kernel: replay_paged_kv_chunk_softmax_standalone
+
+pmc : VALUInsts SALUInsts SFetchInsts OccupancyPercent GPUBusy
+kernel: replay_paged_kv_chunk_softmax_standalone

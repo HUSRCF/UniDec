@@ -1,0 +1,2 @@
+mode,launch_mode,strategy,classes,traces,actual_min,actual_p50,actual_p90,actual_max,total_actual_blocks,total_capacity_blocks,empty_blocks,empty_block_fraction,capacity_actual_ratio_p50,capacity_actual_ratio_p90,capacity_actual_ratio_p99,capacity_actual_ratio_max,overflow,launch_count,metadata_setup_ms,event_ms,wall_ms,per_trace_event_us,per_trace_wall_us
+paged_kv_full_producer,fused,single_max,132,11932,6,20.0,130.0,132,532586,1575024,1042438,0.6618553114111277,6.6,16.5,22.0,22.0,0,1,69.34405598440208,64.56353759765625,64.6440839918796,5.410956888841456,5.417707340921857
