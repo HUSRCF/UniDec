@@ -4,6 +4,17 @@ This directory is a standalone Phase 1/2 scaffold for RDNA3/gfx11 gather and
 local densification experiments. It intentionally avoids the historical D256
 and full FA4 build paths.
 
+## Reports
+
+- `PHASE3_RESULTS.md`: running experiment log from persistent queue through
+  fixed-grid, strict vLLM replay, row ordering, and remap-policy ablations.
+- `RDNA3_PAGED_KV_TECHNICAL_REPORT.md`: conservative summary of what the
+  current evidence supports and what it does not support.
+- `VLLM_LOCALITY_INTEGRATION_PLAN.md`: minimal vLLM-facing integration plan for
+  locality-aware row permutation and row-index output writeback.
+- `VLLM_TRACE_SCHEMA.md`: trace schema and collection guidance for paged-KV
+  decode replay.
+
 ## ABI
 
 The first ABI is deliberately flat:
