@@ -69,9 +69,53 @@ def layout_scope(obj, path: Path):
     return ("fallback", str(path.resolve()), layer)
 
 
-def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float):
+def make_dense_page_rows(raw_rows, physical_superblock: int):
+    if physical_superblock <= 0:
+        raise RuntimeError("--physical-superblock must be positive")
+
     scoped_ids = {}
+    if physical_superblock > 1:
+        blocks_by_scope = {}
+        for item in raw_rows:
+            scope_ids = blocks_by_scope.setdefault(item["scope"], set())
+            for block_id in item["block_ids"]:
+                if block_id < 0:
+                    raise RuntimeError("--physical-superblock requires non-negative trace block_ids")
+                scope_ids.add(block_id)
+
+        next_phys = 0
+        for scope in sorted(blocks_by_scope):
+            current_group = None
+            group_base = 0
+            for block_id in sorted(blocks_by_scope[scope]):
+                group = block_id // physical_superblock
+                offset = block_id % physical_superblock
+                if group != current_group:
+                    current_group = group
+                    group_base = next_phys
+                    next_phys += physical_superblock
+                scoped_ids[(scope, block_id)] = group_base + offset
+
     rows = []
+    for item in raw_rows:
+        if physical_superblock > 1:
+            dense_pages = [scoped_ids[(item["scope"], block_id)] for block_id in item["block_ids"]]
+        else:
+            dense_pages = [
+                scoped_ids.setdefault((item["scope"], block_id), len(scoped_ids))
+                for block_id in item["block_ids"]
+            ]
+        rows.append(
+            {
+                "pages": dense_pages,
+                "actual": item["actual"],
+            }
+        )
+    return rows
+
+
+def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float, physical_superblock: int):
+    raw_rows = []
     for path in trace_files(paths):
         with path.open() as f:
             for line_no, line in enumerate(f, start=1):
@@ -85,10 +129,6 @@ def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float):
                 if block_ids is None:
                     raise RuntimeError(f"{path}:{line_no}: missing sequences[].block_ids")
                 scope = layout_scope(obj, path)
-                dense_pages = []
-                for block_id in block_ids:
-                    key = (scope, int(block_id))
-                    dense_pages.append(scoped_ids.setdefault(key, len(scoped_ids)))
 
                 seqlens = obj.get("cache_seqlens") or []
                 if len(seqlens) != 1:
@@ -96,13 +136,14 @@ def load_rows(paths: Sequence[Path], chunk_tokens: int, actual_scale: float):
                 seqlen = int(seqlens[0])
                 num_kv_heads = int(obj.get("num_kv_heads") or 1)
                 actual = math.ceil(max(0, seqlen) / chunk_tokens) * num_kv_heads
-                rows.append(
+                raw_rows.append(
                     {
-                        "pages": dense_pages,
+                        "scope": scope,
+                        "block_ids": [int(block_id) for block_id in block_ids],
                         "actual": int(math.ceil(actual * actual_scale)),
                     }
                 )
-    return rows
+    return make_dense_page_rows(raw_rows, physical_superblock)
 
 
 def choose_capacity(actual: int, classes: Sequence[int]) -> int:
@@ -159,15 +200,20 @@ def lcp(a: Sequence[int], b: Sequence[int]) -> int:
 
 def window_unique_stats(rows, order: Sequence[int], window: int):
     values = []
+    spans = []
     for start in range(0, len(order), window):
         pages = set()
         for row in order[start : start + window]:
             pages.update(rows[row]["pages"])
         values.append(len(pages))
+        spans.append((max(pages) - min(pages) + 1) if pages else 0)
     return {
         f"unique_pages_w{window}_mean": sum(values) / len(values) if values else float("nan"),
         f"unique_pages_w{window}_p50": percentile(values, 0.50),
         f"unique_pages_w{window}_p90": percentile(values, 0.90),
+        f"page_span_w{window}_mean": sum(spans) / len(spans) if spans else float("nan"),
+        f"page_span_w{window}_p50": percentile(spans, 0.50),
+        f"page_span_w{window}_p90": percentile(spans, 0.90),
     }
 
 
@@ -203,10 +249,16 @@ def reuse_distance_stats(rows, order: Sequence[int]):
     }
 
 
-def summarize_order(rows, order: Sequence[int], order_name: str):
+def summarize_order(rows, order: Sequence[int], order_name: str, physical_superblock: int):
     lcps = [lcp(rows[a]["pages"], rows[b]["pages"]) for a, b in zip(order, order[1:])]
+    first_page_deltas = [
+        abs(rows[a]["pages"][0] - rows[b]["pages"][0])
+        for a, b in zip(order, order[1:])
+        if rows[a]["pages"] and rows[b]["pages"]
+    ]
     out = {
         "row_order": order_name,
+        "physical_superblock": physical_superblock,
         "rows": len(order),
         "adjacent_lcp_mean": sum(lcps) / len(lcps) if lcps else 0.0,
         "adjacent_lcp_p50": percentile(lcps, 0.50),
@@ -218,6 +270,11 @@ def summarize_order(rows, order: Sequence[int], order_name: str):
         "adjacent_lcp_ge2_rate": sum(1 for value in lcps if value >= 2) / len(lcps)
         if lcps
         else 0.0,
+        "adjacent_first_page_delta_mean": sum(first_page_deltas) / len(first_page_deltas)
+        if first_page_deltas
+        else 0.0,
+        "adjacent_first_page_delta_p50": percentile(first_page_deltas, 0.50),
+        "adjacent_first_page_delta_p90": percentile(first_page_deltas, 0.90),
     }
     for window in (32, 128, 512):
         out.update(window_unique_stats(rows, order, window))
@@ -231,16 +288,17 @@ def main():
     parser.add_argument("--classes", default="8,12,20,36,68,132")
     parser.add_argument("--chunk-tokens", type=int, default=32)
     parser.add_argument("--actual-scale", type=float, default=1.0)
+    parser.add_argument("--physical-superblock", type=int, default=1)
     parser.add_argument("--row-orders", nargs="+", default=list(ROW_ORDERS), choices=ROW_ORDERS)
     parser.add_argument("--output", type=Path, default=THIS_DIR / "prof" / "strict_trace_row_order_reuse.csv")
     args = parser.parse_args()
 
     classes = sorted(parse_int_list(args.classes))
-    rows = load_rows(args.trace, args.chunk_tokens, args.actual_scale)
+    rows = load_rows(args.trace, args.chunk_tokens, args.actual_scale, args.physical_superblock)
     summaries = []
     for order_name in args.row_orders:
         order = launch_order(rows, classes, order_name)
-        summaries.append(summarize_order(rows, order, order_name))
+        summaries.append(summarize_order(rows, order, order_name, args.physical_superblock))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", newline="") as f:
@@ -252,7 +310,8 @@ def main():
     for row in summaries:
         print(
             "{row_order}: lcp_mean={adjacent_lcp_mean:.3f} "
-            "reuse_p50={reuse_distance_p50:.1f} unique_w128_p50={unique_pages_w128_p50:.1f}".format(
+            "reuse_p50={reuse_distance_p50:.1f} unique_w128_p50={unique_pages_w128_p50:.1f} "
+            "span_w128_p50={page_span_w128_p50:.1f}".format(
                 **row
             )
         )

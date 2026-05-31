@@ -433,6 +433,33 @@ Current route after Phase 6:
   Software prefetch should stay a narrow C++/ISA microkernel sweep before any
   hand-written assembly is considered.
 
+Physical superblock replay is available in the standalone and Python replay
+paths:
+
+```bash
+./standalone_paged_producer \
+  --page-locality trace \
+  --physical-superblock 8 \
+  --strategy capacity_class \
+  --row-order auto-first-page \
+  --restore-mode row-indices \
+  --scheduler-reuse-metadata-buffers \
+  --limit-traces 8192 \
+  --output prof/phase7_superblock_s8_auto-first-page_rows_8192.csv
+
+python experiments/rdna3_gather/analyze_row_order_reuse.py \
+  --physical-superblock 8 \
+  --row-orders original first-page \
+  --output experiments/rdna3_gather/prof/phase7_superblock_reuse_s8.csv
+```
+
+The current `--physical-superblock` mode is only a replay allocator model. It
+groups layout-scoped numeric block IDs into local allocation groups; it does not
+assert that vLLM numeric block IDs are physical addresses. First results are in
+`prof/phase7_superblock_rows8192_summary.csv`; they show the scaffold is working,
+but the current numeric-ID grouping does not yet beat the Phase 6 row-ordering
+effect by itself.
+
 To inspect the captured block-table reuse and KV layout signatures:
 
 ```bash

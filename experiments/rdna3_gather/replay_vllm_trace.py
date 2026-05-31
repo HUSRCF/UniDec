@@ -380,7 +380,41 @@ def make_paged_state(trace_meta, args, dtype):
     kv_pages = int(args.kv_pages)
     if kv_pages <= 0:
         raise RuntimeError("--kv-pages must be positive")
+    if int(args.physical_superblock) <= 0:
+        raise RuntimeError("--physical-superblock must be positive")
     trace_page_ids = {}
+    if use_trace_blocks and int(args.physical_superblock) > 1:
+        blocks_by_scope = {}
+        for row, seqlen in enumerate(trace_meta.cache_seqlens):
+            pages = max(1, math.ceil(seqlen / page_block_size))
+            block_ids = trace_meta.block_id_rows[row]
+            if block_ids is None or len(block_ids) != pages:
+                raise RuntimeError(
+                    f"trace block_ids length mismatch at row={row}: "
+                    f"got {0 if block_ids is None else len(block_ids)} expected {pages}"
+                )
+            scope = trace_meta.block_id_scopes[row]
+            scope_ids = blocks_by_scope.setdefault(scope, set())
+            for block_id in block_ids:
+                block_id = int(block_id)
+                if block_id < 0:
+                    raise RuntimeError("--physical-superblock requires non-negative trace block_ids")
+                scope_ids.add(block_id)
+
+        next_phys = 0
+        superblock = int(args.physical_superblock)
+        for scope in sorted(blocks_by_scope):
+            current_group = None
+            group_base = 0
+            for block_id in sorted(blocks_by_scope[scope]):
+                group = block_id // superblock
+                offset = block_id % superblock
+                if group != current_group:
+                    current_group = group
+                    group_base = next_phys
+                    next_phys += superblock
+                trace_page_ids[(scope, block_id)] = group_base + offset
+
     for row, seqlen in enumerate(trace_meta.cache_seqlens):
         pages = max(1, math.ceil(seqlen / page_block_size))
         for page in range(pages):
@@ -390,10 +424,13 @@ def make_paged_state(trace_meta, args, dtype):
                     raise RuntimeError(
                         f"trace block_ids length mismatch at row={row}: "
                         f"got {0 if block_ids is None else len(block_ids)} expected {pages}"
-                    )
+                )
                 scope = trace_meta.block_id_scopes[row]
                 key = (scope, int(block_ids[page]))
-                phys = trace_page_ids.setdefault(key, len(trace_page_ids))
+                if int(args.physical_superblock) > 1:
+                    phys = trace_page_ids[key]
+                else:
+                    phys = trace_page_ids.setdefault(key, len(trace_page_ids))
             elif args.page_locality == "contiguous":
                 phys = row * max_pages_per_seq + page
             elif args.page_locality == "page-cross":
@@ -403,8 +440,9 @@ def make_paged_state(trace_meta, args, dtype):
             else:
                 phys = (row * 1103515245 + page * 12345 + args.seed) & 0x7FFFFFFF
             block_table[row, page] = phys % kv_pages
-    if use_trace_blocks and len(trace_page_ids) > kv_pages:
-        kv_pages = len(trace_page_ids)
+    trace_required_pages = max(trace_page_ids.values(), default=-1) + 1 if use_trace_blocks else 0
+    if use_trace_blocks and trace_required_pages > kv_pages:
+        kv_pages = trace_required_pages
         for row, seqlen in enumerate(trace_meta.cache_seqlens):
             pages = max(1, math.ceil(seqlen / page_block_size))
             for page in range(pages):
@@ -449,6 +487,7 @@ def make_paged_state(trace_meta, args, dtype):
         dim=dim,
         kv_pages=kv_pages,
         page_locality=args.page_locality,
+        physical_superblock=int(args.physical_superblock),
     )
 
 
@@ -846,6 +885,7 @@ def main():
     parser.add_argument("--value-dim", type=int, default=32)
     parser.add_argument("--page-locality", choices=("random", "contiguous", "page-cross", "hot-page", "trace"), default="random")
     parser.add_argument("--hot-pages", type=int, default=1)
+    parser.add_argument("--physical-superblock", type=int, default=1)
     parser.add_argument("--chunk-tokens", type=int, default=32)
     parser.add_argument("--warmup", type=int, default=1)
     parser.add_argument("--iters", type=int, default=5)

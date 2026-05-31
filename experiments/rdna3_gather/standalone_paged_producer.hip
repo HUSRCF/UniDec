@@ -58,6 +58,7 @@ struct Args
     int chunk_tokens = 32;
     int kv_pages = 256;
     int hot_pages = 1;
+    int physical_superblock = 1;
     int seed = 1234;
     int value_dim = 32;
     int work_heads = 0;
@@ -638,6 +639,8 @@ Args parse_args(int argc, char** argv)
             args.kv_pages = std::stoi(need_value("--kv-pages"));
         else if(key == "--hot-pages")
             args.hot_pages = std::stoi(need_value("--hot-pages"));
+        else if(key == "--physical-superblock")
+            args.physical_superblock = std::stoi(need_value("--physical-superblock"));
         else if(key == "--seed")
             args.seed = std::stoi(need_value("--seed"));
         else if(key == "--value-dim")
@@ -679,6 +682,10 @@ Args parse_args(int argc, char** argv)
     if(args.classes.empty())
     {
         throw std::runtime_error("at least one capacity class is required");
+    }
+    if(args.physical_superblock <= 0)
+    {
+        throw std::runtime_error("--physical-superblock must be positive");
     }
     if(!is_supported_row_order(args.row_order))
     {
@@ -1085,7 +1092,7 @@ void write_csv(const Args& args,
     }
     std::ofstream out(args.output_csv);
     out << "strategy,page_locality,row_order,effective_row_order,restore_mode,"
-           "scheduler_reuse_metadata_buffers,traces,actual_min,actual_p50,actual_p90,actual_max,"
+           "physical_superblock,scheduler_reuse_metadata_buffers,traces,actual_min,actual_p50,actual_p90,actual_max,"
            "total_actual_blocks,total_capacity_blocks,empty_blocks,empty_block_fraction,"
            "launch_count,grid_threads,event_ms,per_trace_us,page_block_size,num_kv_heads,"
            "head_dim,chunk_tokens,value_dim,first_page_unique,first_page_unique_ratio,"
@@ -1098,6 +1105,7 @@ void write_csv(const Args& args,
     const int empty = total_capacity - total_actual;
     out << args.strategy << "," << args.page_locality << "," << args.row_order << ","
         << effective_row_order << "," << args.restore_mode << ","
+        << args.physical_superblock << ","
         << (args.scheduler_reuse_metadata_buffers ? 1 : 0) << ","
         << actual.size() << ","
         << *std::min_element(actual.begin(), actual.end()) << "," << percentile(actual, 0.50)
@@ -1185,6 +1193,51 @@ int main(int argc, char** argv)
 
         std::vector<int> block_table(static_cast<size_t>(num_rows) * max_pages_per_seq, -1);
         std::map<std::pair<std::string, int>, int> trace_page_ids;
+        if(use_trace_blocks && args.physical_superblock > 1)
+        {
+            std::map<std::string, std::set<int>> blocks_by_scope;
+            for(int row = 0; row < num_rows; ++row)
+            {
+                const int pages = std::max(1, (meta.seqlens[row] + meta.page_block_size - 1) /
+                                                 meta.page_block_size);
+                const auto& row_blocks = meta.block_ids[row];
+                if(static_cast<int>(row_blocks.size()) != pages)
+                {
+                    throw std::runtime_error("trace block_ids length mismatch at row " +
+                                             std::to_string(row));
+                }
+                auto& ids = blocks_by_scope[meta.block_scopes[row]];
+                for(int page = 0; page < pages; ++page)
+                {
+                    if(row_blocks[page] < 0)
+                    {
+                        throw std::runtime_error(
+                            "--physical-superblock requires non-negative trace block_ids");
+                    }
+                    ids.insert(row_blocks[page]);
+                }
+            }
+
+            int next_phys = 0;
+            for(const auto& scope_and_ids : blocks_by_scope)
+            {
+                int current_group = std::numeric_limits<int>::min();
+                int group_base = 0;
+                for(int block_id : scope_and_ids.second)
+                {
+                    const int group = block_id / args.physical_superblock;
+                    const int offset = block_id % args.physical_superblock;
+                    if(group != current_group)
+                    {
+                        current_group = group;
+                        group_base = next_phys;
+                        next_phys += args.physical_superblock;
+                    }
+                    trace_page_ids.emplace(std::make_pair(scope_and_ids.first, block_id),
+                                           group_base + offset);
+                }
+            }
+        }
         for(int row = 0; row < num_rows; ++row)
         {
             const int pages = std::max(1, (meta.seqlens[row] + meta.page_block_size - 1) /
@@ -1201,15 +1254,22 @@ int main(int argc, char** argv)
                                                  std::to_string(row));
                     }
                     const auto key = std::make_pair(meta.block_scopes[row], row_blocks[page]);
-                    auto it = trace_page_ids.find(key);
-                    if(it == trace_page_ids.end())
+                    if(args.physical_superblock > 1)
                     {
-                        phys = static_cast<int>(trace_page_ids.size());
-                        trace_page_ids.emplace(key, phys);
+                        phys = trace_page_ids.at(key);
                     }
                     else
                     {
-                        phys = it->second;
+                        auto it = trace_page_ids.find(key);
+                        if(it == trace_page_ids.end())
+                        {
+                            phys = static_cast<int>(trace_page_ids.size());
+                            trace_page_ids.emplace(key, phys);
+                        }
+                        else
+                        {
+                            phys = it->second;
+                        }
                     }
                 }
                 else if(args.page_locality == "contiguous")
@@ -1232,9 +1292,17 @@ int main(int argc, char** argv)
                     phys % args.kv_pages;
             }
         }
-        if(use_trace_blocks && static_cast<int>(trace_page_ids.size()) > args.kv_pages)
+        int trace_required_pages = 0;
+        if(use_trace_blocks)
         {
-            args.kv_pages = static_cast<int>(trace_page_ids.size());
+            for(const auto& item : trace_page_ids)
+            {
+                trace_required_pages = std::max(trace_required_pages, item.second + 1);
+            }
+        }
+        if(use_trace_blocks && trace_required_pages > args.kv_pages)
+        {
+            args.kv_pages = trace_required_pages;
             for(int row = 0; row < num_rows; ++row)
             {
                 const int pages = std::max(1, (meta.seqlens[row] + meta.page_block_size - 1) /
@@ -1437,6 +1505,7 @@ int main(int argc, char** argv)
                   << " row_order=" << args.row_order
                   << " effective=" << effective_row_order
                   << " restore_mode=" << args.restore_mode
+                  << " physical_superblock=" << args.physical_superblock
                   << " traces=" << num_rows
                   << " actual_min=" << *std::min_element(actual.begin(), actual.end())
                   << " actual_p50=" << percentile(actual, 0.50)

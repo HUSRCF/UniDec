@@ -2715,6 +2715,58 @@ Interpretation:
   main architecture assumption until a C++ unrolled version shows a clear signal
   without VGPR/scratch regressions.
 
+### Phase 7: Physical Superblock Replay Scaffold
+
+The first physical-layout experiment is implemented as a replay-only remap, not
+as a vLLM allocator change. With `--page-locality trace`, `--physical-superblock
+N` groups layout-scoped numeric block IDs into allocation groups of `N` logical
+blocks and maps blocks inside each group to contiguous physical page IDs. The
+default `N=1` keeps the previous dense trace remap.
+
+This is intentionally a low-cost simulator. It preserves vLLM logical block
+semantics and only changes the synthetic KV pool address mapping used by replay.
+It does not claim that real vLLM numeric block IDs are physical addresses.
+
+Initial 8,192-row replay, `value_dim=32`, capacity classes:
+
+| physical superblock | row order | effective order | online E2E ms | speedup vs same-layout original | window-128 page span p50 |
+| ---: | --- | --- | ---: | ---: | ---: |
+| 1 | original | original | 69.762 | 1.000x | 138 |
+| 1 | first-page | first-page | 51.155 | 1.364x | 10 |
+| 1 | auto-first-page | first-page | 51.659 | 1.350x | 10 |
+| 4 | original | original | 70.067 | 1.000x | 2712 |
+| 4 | first-page | first-page | 51.319 | 1.365x | 37 |
+| 4 | auto-first-page | first-page | 50.965 | 1.375x | 37 |
+| 8 | original | original | 70.678 | 1.000x | 2841 |
+| 8 | first-page | first-page | 51.323 | 1.377x | 41 |
+| 8 | auto-first-page | first-page | 51.053 | 1.384x | 41 |
+| 16 | original | original | 69.812 | 1.000x | 2973 |
+| 16 | first-page | first-page | 50.333 | 1.387x | 41 |
+| 16 | auto-first-page | first-page | 51.424 | 1.358x | 41 |
+
+Interpretation:
+
+- The scaffold is working, but this first remap does not yet show a clear
+  standalone speedup from physical superblocks. Kernel time is dominated by the
+  same row-ordering signal as Phase 6.
+- Equality-based reuse metrics (`unique pages`, reuse distance, LCP) are
+  unchanged by physical remapping, as expected. Superblock layout changes address
+  distance/span, not whether two rows refer to the same logical block.
+- The current remap uses numeric block-ID groups. On this trace, that can
+  increase window span because the captured numeric IDs are sparse across layout
+  scopes. The next replay variant should test a compaction-oriented allocator
+  model: keep logical IDs stable for sharing, but allocate consecutive blocks in
+  generation order inside each `(layout scope, sequence)` or prefix allocation
+  segment.
+
+Output files:
+
+```text
+prof/phase7_superblock_reuse_s{1,4,8,16}.csv
+prof/phase7_superblock_s{1,4,8,16}_{original,first-page,auto-first-page}_rows_8192.csv
+prof/phase7_superblock_rows8192_summary.csv
+```
+
 Output files:
 
 ```text
